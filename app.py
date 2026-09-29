@@ -378,35 +378,27 @@ with st.sidebar:
             st.success(f"File loaded: `{uploaded_file.name}`")
 
     st.markdown("---")
-    st.markdown('<div class="card-label">⚙️ Engine & Architecture</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card-label">⚙️ Active Architecture</div>', unsafe_allow_html=True)
 
-    whisper_engine = st.selectbox(
-        "Whisper STT Engine",
-        ["groq (whisper-large-v3, Cloud Ultra-Fast)", "local (openai-whisper, Offline)", "openai (whisper-1, Cloud)"],
-        index=0,
-    )
+    # Locked production engines (no dropdowns)
     selected_whisper_engine = "groq"
-    if "local" in whisper_engine:
-        selected_whisper_engine = "local"
-    elif "openai" in whisper_engine:
-        selected_whisper_engine = "openai"
-
-    groq_model = st.selectbox(
-        "Groq LLM Reasoner",
-        [
-            "qwen/qwen3.8-27b (Verified Active & Ultra-Fast)",
-            "openai/gpt-oss-120b",
-            "openai/gpt-oss-20b",
-            "Custom Model ID...",
-        ],
-        index=0,
-        help="qwen/qwen3.8-27b is the active reasoning model on your Groq key."
-    )
-    if "Custom" in groq_model:
-        selected_groq_model = st.text_input("Enter custom Groq model ID:", value="qwen/qwen3.8-27b").strip()
-    else:
-        selected_groq_model = groq_model.split(" ")[0]
+    selected_groq_model = "qwen/qwen3.8-27b"
     os.environ["GROQ_MODEL"] = selected_groq_model
+
+    st.markdown("""
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem 0.9rem; margin-bottom: 0.5rem">
+        <div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem">Speech-to-Text</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: #67e8f9; display: flex; align-items: center; gap: 0.4rem">
+            <span>🎙️</span> Whisper Large-v3 (Groq Cloud)
+        </div>
+    </div>
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem 0.9rem; margin-bottom: 0.75rem">
+        <div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem">Reasoning Core</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: #c4b5fd; display: flex; align-items: center; gap: 0.4rem">
+            <span>⚡</span> Groq LPU (qwen/qwen3.8-27b)
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("---")
     run_button = st.button("🚀 Process & Analyze Meeting", use_container_width=True)
