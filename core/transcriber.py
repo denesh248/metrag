@@ -1,6 +1,18 @@
 import os
 import io
 import sys
+
+# Python 3.13+ compatibility shim for audioop / pydub
+try:
+    import audioop
+except ImportError:
+    try:
+        import audioop_lts as audioop
+        sys.modules["audioop"] = audioop
+        sys.modules["pyaudioop"] = audioop
+    except ImportError:
+        pass
+
 from pydub import AudioSegment
 
 if hasattr(sys.stdout, "reconfigure"):

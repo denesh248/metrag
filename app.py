@@ -9,6 +9,16 @@ if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     except Exception:
         pass
+# Python 3.13+ compatibility shim for audioop / pydub
+try:
+    import audioop
+except ImportError:
+    try:
+        import audioop_lts as audioop
+        sys.modules["audioop"] = audioop
+        sys.modules["pyaudioop"] = audioop
+    except ImportError:
+        pass
 
 import streamlit as st
 import os
