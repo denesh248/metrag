@@ -14,15 +14,19 @@ import streamlit as st
 import os
 import time
 import json
-from dotenv import load_dotenv
 
 # Load environment variables (.env locally or st.secrets on Streamlit Cloud)
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 try:
     if hasattr(st, "secrets"):
         for k in ["GROQ_API_KEY", "OPENAI_API_KEY", "GROQ_MODEL"]:
             if k in st.secrets and not os.getenv(k):
-                os.environ[k] = st.secrets[k]
+                os.environ[k] = str(st.secrets[k])
 except Exception:
     pass
 
