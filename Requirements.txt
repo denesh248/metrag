@@ -1,0 +1,40 @@
+# ── AI Meeting & Video Assistant ── requirements.txt ──────────────────────────
+# Python >= 3.10 recommended (Tested on Python 3.12)
+
+# ── Audio / Video acquisition ─────────────────────────────────────────────────
+yt-dlp>=2024.4.9                  # Download audio from YouTube URLs
+pydub>=0.25.1                     # Audio manipulation / slicing
+ffmpeg-python>=0.2.0              # FFmpeg bindings
+
+# ── Speech-to-Text (Whisper Cloud & Local) ────────────────────────────────────
+groq>=0.9.0                       # High-speed Groq Whisper (whisper-large-v3)
+openai>=1.20.0                    # OpenAI Whisper API fallback (whisper-1)
+openai-whisper>=20231117          # Local Whisper fallback
+torch>=2.2.0                      # PyTorch for local Whisper
+torchaudio>=2.2.0                 # PyTorch Audio utilities
+
+# ── LLM Orchestration — LangChain LCEL + Groq LPU ────────────────────────────
+langchain>=0.2.0
+langchain-core>=0.2.0
+langchain-community>=0.2.0
+langchain-groq>=0.1.0             # Ultra-fast Groq LLM integration (llama-3.3-70b)
+
+# ── Vector Store & RAG ────────────────────────────────────────────────────────
+chromadb>=0.5.0                   # High-performance local vector store
+sentence-transformers>=3.0.0      # Local embedding generation
+langchain-huggingface>=0.0.3      # HuggingFace Embeddings bridge
+langchain-chroma>=0.1.0           # LangChain Chroma connector
+huggingface-hub>=0.23.0           # HuggingFace model cache
+tiktoken>=0.7.0                   # Tokenizer utilities
+
+# ── Streamlit UI & Visuals ───────────────────────────────────────────────────
+streamlit>=1.35.0
+streamlit-extras>=0.4.0           # UI components
+watchdog>=4.0.0                   # Hot-reload optimizations
+
+# ── Export & Utilities ────────────────────────────────────────────────────────
+reportlab>=4.2.0                  # PDF export generator
+python-dotenv>=1.0.0              # Environment variable loader (.env)
+numpy>=1.26.0
+tqdm>=4.66.0
+requests>=2.32.0
