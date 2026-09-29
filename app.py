@@ -34,7 +34,7 @@ except ImportError:
 
 try:
     if hasattr(st, "secrets"):
-        for k in ["GROQ_API_KEY", "OPENAI_API_KEY", "GROQ_MODEL"]:
+        for k in ["GROQ_API_KEY", "OPENAI_API_KEY", "GROQ_MODEL", "YOUTUBE_COOKIES"]:
             if k in st.secrets and not os.getenv(k):
                 os.environ[k] = str(st.secrets[k])
 except Exception:
@@ -527,12 +527,15 @@ if run_button:
             for key, _, _ in pipeline_stages:
                 if st.session_state.pipeline_steps.get(key) == "active":
                     set_step(key, "pending")
-            err_text = str(exc)
-            if "403" in err_text or "Forbidden" in err_text:
+            err_text = str(exc).lower()
+            if any(k in err_text for k in ["403", "forbidden", "bot", "sign in", "confirm you're not a bot", "cookies"]):
                 progress_msg.error(
-                    "⚠️ **YouTube Cloud Download Restricted (HTTP 403: Forbidden)**\n\n"
-                    "YouTube frequently restricts automated video downloads from public cloud hosting IPs (Streamlit Cloud / AWS).\n\n"
-                    "💡 **Quick Solution:** Download the video/audio onto your device and use the **'📁 Upload Audio/Video'** tab above to upload it directly. Local file processing bypasses YouTube cloud blocks 100% reliably!"
+                    "⚠️ **YouTube Cloud Anti-Bot Restriction Detected**\n\n"
+                    "YouTube blocked direct video extraction from this public cloud server IP (Streamlit Cloud / AWS), requiring bot/CAPTCHA verification.\n\n"
+                    "💡 **Recommended 1-Click Fix:**\n"
+                    "1. Download the video or audio file directly onto your computer.\n"
+                    "2. Switch to the **'📁 Upload Audio/Video'** tab above and upload it.\n"
+                    "3. Click **Start Analysis & Intelligence Processing** — local file processing works 100% reliably without contacting YouTube!"
                 )
             else:
                 progress_msg.error(f"❌ Execution encountered an error: {exc}")

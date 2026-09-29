@@ -31,8 +31,21 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 
 def download_youtube_audio(url: str) -> str:
-    """Download YouTube audio with resilient multi-client fallbacks for cloud hosting."""
+    """Download YouTube audio with resilient multi-client fallbacks and cookie support for cloud hosting."""
     output_tmpl = os.path.join(DOWNLOAD_DIR, "%(title)s.%(ext)s")
+
+    # Optional cookie support for environments with YouTube bot checks
+    cookie_file = None
+    if os.path.exists("cookies.txt"):
+        cookie_file = "cookies.txt"
+    elif "YOUTUBE_COOKIES" in os.environ and os.environ["YOUTUBE_COOKIES"].strip():
+        temp_cookie_path = os.path.join(DOWNLOAD_DIR, "yt_cookies.txt")
+        try:
+            with open(temp_cookie_path, "w", encoding="utf-8") as cf:
+                cf.write(os.environ["YOUTUBE_COOKIES"].strip())
+            cookie_file = temp_cookie_path
+        except Exception:
+            cookie_file = None
 
     client_strategies = [
         ["android", "ios", "mweb", "web"],
@@ -73,6 +86,9 @@ def download_youtube_audio(url: str) -> str:
             "socket_timeout": 30,
             "retries": 3,
         }
+        if cookie_file and os.path.exists(cookie_file):
+            ydl_opts["cookiefile"] = cookie_file
+
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
@@ -89,12 +105,12 @@ def download_youtube_audio(url: str) -> str:
             continue
 
     if last_exc:
-        err_str = str(last_exc)
-        if "403" in err_str or "Forbidden" in err_str:
+        err_str = str(last_exc).lower()
+        if any(keyword in err_str for keyword in ["403", "forbidden", "bot", "sign in", "cookies"]):
             raise RuntimeError(
-                "YouTube blocked automated downloading from this cloud hosting server (HTTP Error 403: Forbidden). "
-                "Cloud server IPs (like Streamlit Cloud / AWS) are frequently blocked by YouTube anti-bot protections. "
-                "Please download the video or audio to your computer and upload it directly using the 'Upload Audio/Video' tab."
+                "YouTube Cloud Anti-Bot Verification triggered: YouTube detected automated requests from this cloud server IP (Streamlit Cloud / AWS). "
+                "💡 Recommended Solution: Download the video or audio to your computer and upload it directly using the 'Upload Audio/Video' tab. "
+                "File uploads process 100% reliably without contacting YouTube."
             ) from last_exc
         raise last_exc
 

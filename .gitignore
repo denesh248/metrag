@@ -14,3 +14,4 @@ vector_db/
 .agents/
 .idea/
 .vscode/
+*cookies.txt
