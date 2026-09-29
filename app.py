@@ -527,7 +527,15 @@ if run_button:
             for key, _, _ in pipeline_stages:
                 if st.session_state.pipeline_steps.get(key) == "active":
                     set_step(key, "pending")
-            progress_msg.error(f"❌ Execution encountered an error: {exc}")
+            err_text = str(exc)
+            if "403" in err_text or "Forbidden" in err_text:
+                progress_msg.error(
+                    "⚠️ **YouTube Cloud Download Restricted (HTTP 403: Forbidden)**\n\n"
+                    "YouTube frequently restricts automated video downloads from public cloud hosting IPs (Streamlit Cloud / AWS).\n\n"
+                    "💡 **Quick Solution:** Download the video/audio onto your device and use the **'📁 Upload Audio/Video'** tab above to upload it directly. Local file processing bypasses YouTube cloud blocks 100% reliably!"
+                )
+            else:
+                progress_msg.error(f"❌ Execution encountered an error: {exc}")
 
 # ─── Dashboard Results View ──────────────────────────────────────────────────────
 if st.session_state.result:

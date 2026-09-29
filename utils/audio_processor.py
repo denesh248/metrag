@@ -31,23 +31,74 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 
 def download_youtube_audio(url: str) -> str:
-    output_path = os.path.join(DOWNLOAD_DIR, "%(title)s.%(ext)s")
-    ydl_opts = {
-        "format": "bestaudio/best",
-        "outtmpl": output_path,
-        "postprocessors": [
-            {
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "wav",
-                "preferredquality": "192",
-            }
-        ],
-        "quiet": True,
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
-    return filename
+    """Download YouTube audio with resilient multi-client fallbacks for cloud hosting."""
+    output_tmpl = os.path.join(DOWNLOAD_DIR, "%(title)s.%(ext)s")
+
+    client_strategies = [
+        ["android", "ios", "mweb", "web"],
+        ["android"],
+        ["ios"],
+        ["mweb"],
+        ["web_embedded", "web"],
+    ]
+
+    last_exc = None
+    for clients in client_strategies:
+        ydl_opts = {
+            "format": "bestaudio/best",
+            "outtmpl": output_tmpl,
+            "extractor_args": {
+                "youtube": {
+                    "player_client": clients
+                }
+            },
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "wav",
+                    "preferredquality": "192",
+                }
+            ],
+            "quiet": True,
+            "no_warnings": True,
+            "nocheckcertificate": True,
+            "http_headers": {
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/125.0.0.0 Safari/537.36"
+                ),
+                "Accept-Language": "en-US,en;q=0.9",
+            },
+            "socket_timeout": 30,
+            "retries": 3,
+        }
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                raw_filename = ydl.prepare_filename(info)
+                base, _ = os.path.splitext(raw_filename)
+                wav_filename = f"{base}.wav"
+
+                if os.path.exists(wav_filename):
+                    return wav_filename
+                elif os.path.exists(raw_filename):
+                    return convert_to_wav(raw_filename)
+        except Exception as e:
+            last_exc = e
+            continue
+
+    if last_exc:
+        err_str = str(last_exc)
+        if "403" in err_str or "Forbidden" in err_str:
+            raise RuntimeError(
+                "YouTube blocked automated downloading from this cloud hosting server (HTTP Error 403: Forbidden). "
+                "Cloud server IPs (like Streamlit Cloud / AWS) are frequently blocked by YouTube anti-bot protections. "
+                "Please download the video or audio to your computer and upload it directly using the 'Upload Audio/Video' tab."
+            ) from last_exc
+        raise last_exc
+
+    raise RuntimeError("Unable to download YouTube video with available audio streams.")
 
 
 def convert_to_wav(input_path: str) -> str:
